@@ -1,4 +1,4 @@
-#include <cmath>
+#include <algorithm>
 #include <iostream>
 #include <iterator>
 #include <list>
@@ -9,30 +9,27 @@ using namespace std;
 template <typename T>
 class DynamicBinarySearchArray {
 private:
-  typedef typename vector<T>::const_iterator cvt_iterator;
-  typedef typename vector<T>::iterator vt_iterator;
-  typedef typename list<vector<T>>::iterator lvt_iterator;
   list<vector<T>> data;
   size_t size;
 
-  void merge(const vector<T> &prev_it, vector<T> &now_it) const {
-    now_it.reserve(now_it.size() << 1);
+  void merge(const vector<T> &x, vector<T> &y) const {
+    y.reserve(y.size() << 1);
 
-    cvt_iterator first1 = prev_it.begin();
-    vt_iterator first2 = now_it.begin();
-    for (; first1 != prev_it.end() && first2 != now_it.end(); ++first2)
+    typename vector<T>::const_iterator first1 = x.begin();
+    typename vector<T>::iterator first2 = y.begin();
+    for (; first1 != x.end() && first2 != y.end(); ++first2)
       if (*first1 <= *first2)
-        now_it.insert(first2, *first1++);
+        y.insert(first2, *first1++);
 
-    now_it.insert(first2, first1, prev_it.end());
+    y.insert(first2, first1, x.end());
   }
 
 public:
   DynamicBinarySearchArray<T>() : size(0) {}
 
   void insert(const T &val) {
-    lvt_iterator prev_it = data.insert(data.begin(), vector<T>{val});
-    lvt_iterator now_it = next(prev_it);
+    typename list<vector<T>>::iterator prev_it = data.insert(data.begin(), vector<T>{val});
+    typename list<vector<T>>::iterator now_it = next(prev_it);
 
     while (now_it != data.end())
       if (prev_it->size() == now_it->size()) {
@@ -50,16 +47,10 @@ public:
   void insert(T first, Args... val) { insert(first), insert(val...); }
 
   bool search(const T &val) const {
-    for (const vector<T> &sub_arr : data)
-      if (*lower_bound(sub_arr.begin(), sub_arr.end(), val) == val)
-        return true;
-
-    return false;
+    return find_if(data.begin(), data.end(), [&val](const vector<T> &sub_arr) { return *lower_bound(sub_arr.begin(), sub_arr.end(), val) == val; }) != data.end();
   }
 
-  void print() {
-    cout << *this;
-  }
+  void print() { cout << *this; }
 
   friend ostream &operator<<(std::ostream &stream, const DynamicBinarySearchArray<T> &bsa) {
     vector<T> result;
